@@ -62,7 +62,7 @@ app.post("/teacher-login", async (req, res) => {
 app.get("/teacher/:username/polls", async (req, res) => {
   try {
     const username = req.params.username;
-    console.log(`[DEBUG] Poll history requested for username:`, username);
+    
     const polls = await Poll.find({ teacherUsername: username }).sort({ createdAt: -1 }).lean();
     console.log(`[DEBUG] Polls found:`, polls);
     return res.json({ polls });
@@ -83,7 +83,7 @@ io.on("connection", (socket) => {
 
       if (data.role === "student") {
         socket.join("students");
-        console.log(`[JOIN] student ${socket.id} joined students. currentActivePoll:`, currentActivePoll);
+        
         if (currentActivePoll) {
           socket.emit("poll", currentActivePoll);
           console.log(`[JOIN] Sent current poll to late-joining student ${socket.id}:`, currentActivePoll);
@@ -92,7 +92,7 @@ io.on("connection", (socket) => {
         }
       } else if (data.role === "teacher") {
         socket.join("teachers");
-        console.log(`[JOIN] teacher ${socket.id} joined teachers`);
+        
       }
     } catch (err) {
       console.error("join error", err);
@@ -181,11 +181,11 @@ io.on("connection", (socket) => {
         return;
       }
 
-      console.log(`[DEBUG] Before vote:`, poll.options);
+      
       opt.votes = (opt.votes || 0) + 1;
       poll.voters.push(voterKey);
       await poll.save();
-      console.log(`[DEBUG] After vote:`, poll.options);
+      
 
       const results = poll.options.reduce((acc, o) => {
         acc[o.text] = o.votes;
@@ -193,7 +193,7 @@ io.on("connection", (socket) => {
       }, {});
 
 
-  console.log('[DEBUG] pollResults emitted:', { pollId: poll._id.toString(), votes: results });
+  
   io.to("students").emit("pollResults", { pollId: poll._id.toString(), votes: results });
 
       socket.emit("voteAccepted", { pollId: poll._id.toString() });
@@ -246,7 +246,6 @@ async function endPoll(pollId) {
       io.to("students").emit("pollEnded", { pollId, votes: results });
     }
 
-    console.log("Poll ended:", pollId);
   } catch (err) {
     console.error("endPoll helper error:", err);
   }
